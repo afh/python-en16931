@@ -234,7 +234,7 @@ class Entity:
     def tax_scheme(self, scheme):
         """Sets the tax scheme of the Entity.
         """
-        supported_schemes = {None, "VAT"}
+        supported_schemes = {None, "VAT", "FC"}
         if scheme not in supported_schemes:
             raise ValueError("Unsupported tax scheme %s" % scheme)
         self._tax_scheme = scheme
