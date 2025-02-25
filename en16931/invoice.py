@@ -26,6 +26,9 @@ templates = Environment(
 VALID_PAYMENT_CODES = {
     '10': 'cash',
     '49': 'debit',
+    '57': 'standing agreement',
+    '58': 'sepa credit transfer',
+    '59': 'sepa direct debit',
     '31': 'transfer',
     '26': 'cheque',
     '23': 'cheque_b',
@@ -264,6 +267,9 @@ class Invoice:
         It has to be one of:
             * '10': 'cash'
             * '49': 'debit'
+            * '57': 'standing agreement',
+            * '58': 'sepa credit transfer',
+            * '59': 'sepa direct debit',
             * '31': 'transfer'
             * '26': 'cheque'
             * '23': 'cheque_b'
