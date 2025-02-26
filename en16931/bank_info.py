@@ -31,7 +31,7 @@ class BankInfo:
 
     """
 
-    def __init__(self, account=None, iban=None, bic=None,
+    def __init__(self, account=None, holder=None, iban=None, bic=None,
                  mandate_reference_identifier=None):
         """Initialize the Bank Information for an Entity.
 
@@ -39,6 +39,9 @@ class BankInfo:
         ----------
         account: string (optional)
             The bank account number.
+
+        holder: string (optional)
+            The name of the bank account holder.
 
         bic: string (optional)
             The Bank Identification Code of the account.
@@ -57,6 +60,7 @@ class BankInfo:
 
         """
         self.account = account
+        self.holder = holder
         self.iban = iban
         self.bic = bic
         self.mandate_reference_identifier = mandate_reference_identifier
@@ -82,6 +86,23 @@ class BankInfo:
         """Sets the bank account number
         """
         self._account = account
+
+    @property
+    def holder(self):
+        """Property: Bank account holder
+
+        Parameters
+        ----------
+        holder: string
+            The bank account holder.
+        """
+        return self._holder
+
+    @holder.setter
+    def holder(self, holder):
+        """Sets the bank account holder
+        """
+        self._holder = holder
 
     @property
     def iban(self):

@@ -1,7 +1,7 @@
 """
 Class for representing an Invoice.
 """
-from datetime import datetime
+import datetime
 import lxml.etree
 
 from jinja2 import Environment, PackageLoader, select_autoescape
@@ -35,7 +35,6 @@ VALID_PAYMENT_CODES = {
     '48': 'credit',
     'ZZZ': 'awarding, reposition, special',
 }
-
 
 class Invoice:
     """EN16931 Invoice class.
@@ -88,7 +87,7 @@ class Invoice:
 
     """
 
-    def __init__(self, invoice_id=None, customization_id=None, currency="EUR", from_xml=False):
+    def __init__(self, invoice_id=None, customization_id=None, currency="EUR", tax_currency=None, from_xml=False):
         """Initialize an Invoice.
 
         This is the main class and entry point for creating an Invoice.
@@ -102,6 +101,9 @@ class Invoice:
         customization_id: string (optional, default 'urn:cen.eu:en16931:2017#compliant#urn:fdc:peppol.eu:2017:poacc:billing:3.0')
 
         currency: string (optional, default 'EUR')
+            An ISO 4217 currency code.
+
+        tax_currency: string (optional, default 'EUR')
             An ISO 4217 currency code.
 
         from_xml: bool (optional, default False)
@@ -157,6 +159,8 @@ class Invoice:
         self._discount_percent = None
         self._original_xml = None
         self._payment_means_code = None
+        self._payment_means_id = None
+        self._billing_period = None
         self.lines = []
 
     @classmethod
@@ -298,6 +302,23 @@ class Invoice:
         self._payment_means_code = code
 
     @property
+    def payment_means_id(self):
+        """Property: The payment means id.
+
+        Parameters
+        ----------
+        code: string
+            A payment means id.
+        """
+        return self._payment_means_id
+
+    @payment_means_id.setter
+    def payment_means_id(self, id):
+        """Sets the payment means id
+        """
+        self._payment_means_id = id
+
+    @property
     def issue_date(self):
         """Property: The issue date of the invoice.
 
@@ -350,14 +371,8 @@ class Invoice:
     def issue_date(self, date):
         """Set the issue date of the invoice.
         """
-        if not date:
-            return
-        elif isinstance(date, datetime):
-            self._issue_date = date
-        elif isinstance(date, str):
-            self._issue_date = parse_date(date)
-        else:
-            raise ValueError("Unrecognized date")
+        if date:
+            self._issue_date = self.foo(date)
 
     @property
     def due_date(self):
@@ -412,14 +427,15 @@ class Invoice:
     def due_date(self, date):
         """Set the due date of the invoice.
         """
-        if not date:
-            return
-        elif isinstance(date, datetime):
-            self._due_date = date
-        elif isinstance(date, str):
-            self._due_date = parse_date(date)
-        else:
-            raise ValueError("Unrecognized date")
+        if date:
+            self._due_date = self.foo(date)
+
+    def foo(self, date):
+        if isinstance(date, datetime.datetime) or isinstance(date, datetime.date):
+            return date
+        if isinstance(date, str):
+            return parse_date(date)
+        raise ValueError("Unrecognized date")
 
     @property
     def seller_party(self):

@@ -17,7 +17,7 @@ class Entity:
     >>> e = Entity(name="Acme Inc.", tax_scheme="VAT",
     ...            tax_scheme_id="ES34626691F", country="ES",
     ...            party_legal_entity_id="ES34626691F",
-    ...            registration_name="Acme INc.", mail="acme@acme.io",
+    ...            registration_name="Acme Inc.", mail="acme@acme.io",
     ...            endpoint="ES76281415Y", endpoint_scheme="ES:VAT",
     ...            address="easy street", postalzone="08080",
     ...            province="Barcelona, city="Barcelona")
@@ -29,7 +29,7 @@ class Entity:
     >>> e.tax_scheme_id = "ES34626691F"
     >>> e.country = "ES"
     >>> e.party_legal_entity_id = "ES34626691F"
-    >>> e.registration_name = "Acme INc."
+    >>> e.registration_name = "Acme Inc."
     >>> e.endpoint = "ES76281415Y"
     >>> e.endpoint_scheme = "ES:VAT"
     >>> p = PostalAddress(address="easy street", city_name="Barcelona",
@@ -55,7 +55,7 @@ class Entity:
     """
 
     def __init__(self, name=None, tax_scheme=None, tax_scheme_id=None, country=None,
-                 party_legal_entity_id=None, registration_name=None, mail=None,
+                 party_legal_entity_id=None, registration_name=None, phone=None, mail=None,
                  endpoint=None, endpoint_scheme=None, postalzone=None, city=None,
                  address=None, address2=None, province=None):
         """Initialize an Entity.
@@ -81,6 +81,9 @@ class Entity:
 
         registration_name: string.
             The Registration name of the Entity.
+
+        phone: string.
+            The contact Phone of the Entity.
 
         mail: string.
             The contact Email of the Entity.
@@ -120,6 +123,7 @@ class Entity:
         self.country = country
         self.party_legal_entity_id = party_legal_entity_id
         self.registration_name = registration_name
+        self.phone = phone
         self.mail = mail
         self.postalzone = postalzone
         self.city = city

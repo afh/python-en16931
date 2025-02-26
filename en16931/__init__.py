@@ -13,6 +13,7 @@ from en16931.invoice import Invoice
 from en16931.invoice_line import InvoiceLine
 from en16931.tax import Tax
 from en16931.postal_address import PostalAddress
+from en16931.billing_period import BillingPeriod
 from en16931 import xpaths
 from en16931 import b2brouter
 from en16931 import utils

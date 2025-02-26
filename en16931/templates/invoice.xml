@@ -10,7 +10,21 @@
   {% endif -%}
   <cbc:InvoiceTypeCode>{{ invoice.invoice_type_code }}</cbc:InvoiceTypeCode>
   <cbc:DocumentCurrencyCode>{{ invoice.currency }}</cbc:DocumentCurrencyCode>
-  <cbc:TaxCurrencyCode>{{ invoice.currency }}</cbc:TaxCurrencyCode>
+  {% if invoice.tax_currency and invoice.tax_currency != invoice.currency -%}
+  <cbc:TaxCurrencyCode>{{ invoice.tax_currency }}</cbc:TaxCurrencyCode>
+  {% endif -%}
+  {#
+  Im Feld „BT-10 (Buyer reference)“ ein vom Erwerber zugewiesener und für interne Lenkungszwecke benutzter Bezeichner angegeben werden, um die Verarbeitung der Rechnung in seinem System zu vereinfachen (z. B. durch eine Lieferantennummer).
+    Da im B2B-Bereich keine Leitweg-ID erforderlich ist, ist in diesen Fällen umsatzsteuerlich bereits die Angabe eines Platzhalters (z. B. „-“) ausreichend.
+    — https://www.bundesfinanzministerium.de/Content/DE/FAQ/e-rechnung.htm
+  -#}
+  <cbc:BuyerReference>-</cbc:BuyerReference>
+  {% if invoice.billing_period.start and invoice.billing_period.end -%}
+  <cac:InvoicePeriod>
+    <cbc:StartDate>{{ invoice.billing_period.start.strftime("%Y-%m-%d") }}</cbc:StartDate>
+    <cbc:EndDate>{{ invoice.billing_period.end.strftime("%Y-%m-%d") }}</cbc:EndDate>
+  </cac:InvoicePeriod>
+  {% endif -%}
   <cac:AccountingSupplierParty>
     <cac:Party>
       <cbc:EndpointID schemeID="{{ invoice.seller_party.endpoint_scheme or '9920' }}">{{ invoice.seller_party.party_legal_entity_id }}</cbc:EndpointID>
@@ -19,20 +33,22 @@
       </cac:PartyName>
       <cac:PostalAddress>
         <cbc:StreetName>{{ invoice.seller_party.postal_address.address }}</cbc:StreetName>
-        {% if invoice.seller_party.postal_address.address2 is defined -%}
+        {% if invoice.seller_party.postal_address.address2 -%}
         <cbc:AdditionalStreetName>{{ invoice.seller_party.postal_address.address2 }}</cbc:AdditionalStreetName>
         {% endif -%}
         <cbc:CityName>{{ invoice.seller_party.postal_address.city_name }}</cbc:CityName>
         <cbc:PostalZone>{{ invoice.seller_party.postal_address.postal_zone }}</cbc:PostalZone>
+        {% if invoice.seller_party.postal_address.province -%}
         <cbc:CountrySubentity>{{ invoice.seller_party.postal_address.province }}</cbc:CountrySubentity>
+        {% endif -%}
         <cac:Country>
           <cbc:IdentificationCode>{{ invoice.seller_party.postal_address.country }}</cbc:IdentificationCode>
         </cac:Country>
       </cac:PostalAddress>
       <cac:PartyTaxScheme>
-        <cbc:CompanyID>{{ invoice.seller_party.party_legal_entity_id }}</cbc:CompanyID>
+        <cbc:CompanyID>{{ invoice.seller_party.tax_scheme_id }}</cbc:CompanyID>
         <cac:TaxScheme>
-          <cbc:ID>VAT</cbc:ID>
+          <cbc:ID>{{ invoice.seller_party.tax_scheme }}</cbc:ID>
         </cac:TaxScheme>
       </cac:PartyTaxScheme>
       <cac:PartyLegalEntity>
@@ -40,6 +56,10 @@
         <cbc:CompanyID>{{ invoice.seller_party.party_legal_entity_id }}</cbc:CompanyID>
       </cac:PartyLegalEntity>                              
       <cac:Contact>
+        <cbc:Name>{{ invoice.seller_party.registration_name }}</cbc:Name>
+        {% if invoice.seller_party.phone -%}
+        <cbc:Telephone>{{ invoice.seller_party.phone }}</cbc:Telephone>
+        {% endif -%}
         <cbc:ElectronicMail>{{ invoice.seller_party.mail }}</cbc:ElectronicMail>
       </cac:Contact>
     </cac:Party>
@@ -52,20 +72,22 @@
       </cac:PartyName>
       <cac:PostalAddress>
         <cbc:StreetName>{{ invoice.buyer_party.postal_address.address }}</cbc:StreetName>
-        {% if invoice.buyer_party.postal_address.address2 is defined -%}
+        {% if invoice.buyer_party.postal_address.address2 -%}
         <cbc:AdditionalStreetName>{{ invoice.buyer_party.postal_address.address2 }}</cbc:AdditionalStreetName>
         {% endif -%}
         <cbc:CityName>{{ invoice.buyer_party.postal_address.city_name }}</cbc:CityName>
         <cbc:PostalZone>{{ invoice.buyer_party.postal_address.postal_zone }}</cbc:PostalZone>
+        {% if invoice.buyer_party.postal_address.province -%}
         <cbc:CountrySubentity>{{ invoice.buyer_party.postal_address.province }}</cbc:CountrySubentity>
+        {% endif -%}
         <cac:Country>
           <cbc:IdentificationCode>{{ invoice.buyer_party.postal_address.country }}</cbc:IdentificationCode>
         </cac:Country>
       </cac:PostalAddress>
       <cac:PartyTaxScheme>
-        <cbc:CompanyID>{{ invoice.buyer_party.party_legal_entity_id }}</cbc:CompanyID>
+        <cbc:CompanyID>{{ invoice.buyer_party.tax_scheme_id }}</cbc:CompanyID>
         <cac:TaxScheme>
-          <cbc:ID>VAT</cbc:ID>
+          <cbc:ID>{{ invoice.buyer_party.tax_scheme }}</cbc:ID>
         </cac:TaxScheme>
       </cac:PartyTaxScheme>
       <cac:PartyLegalEntity>
@@ -80,6 +102,9 @@
   {%- if invoice.payment_means_code is defined %}
   <cac:PaymentMeans>
     <cbc:PaymentMeansCode>{{ invoice.payment_means_code }}</cbc:PaymentMeansCode>
+    {% if invoice.payment_means_id -%}
+    <cbc:PaymentID>{{ invoice.payment_means_id }}</cbc:PaymentID>
+    {% endif -%}
     {%- if invoice.payment_means_code == "49" and invoice.buyer_party.bank_info.iban is defined %}
     <cac:PaymentMandate>
       {%- if invoice.buyer_party.bank_info.mandate_reference_identifier is defined %}
@@ -98,9 +123,10 @@
         <cbc:ID>{{ invoice.buyer_party.bank_info.account }}</cbc:ID>
       </cac:PayerFinancialAccount>
     </cac:PaymentMandate>
-    {%- elif invoice.payment_means_code == "31" and invoice.seller_party.bank_info.iban is defined and invoice.seller_party.bank_info.bic is defined %}
+    {%- elif (invoice.payment_means_code == "31" or invoice.payment_means_code == "58") and invoice.seller_party.bank_info.iban is defined and invoice.seller_party.bank_info.bic is defined %}
     <cac:PayeeFinancialAccount>
       <cbc:ID>{{ invoice.seller_party.bank_info.iban }}</cbc:ID>
+      <cbc:Name>{{ invoice.seller_party.bank_info.holder }}</cbc:Name>
       <cac:FinancialInstitutionBranch>
         <cbc:ID>{{ invoice.seller_party.bank_info.bic }}</cbc:ID>
       </cac:FinancialInstitutionBranch>
